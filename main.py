@@ -6,11 +6,11 @@ import serial
 import RPi.GPIO as GPIO
 import time
 import sys
+import argparse
 
 __author__ = "Sara Alsowaimel and Amanda Sossong"
 __version__ = "1.0"
 __date__ = "5/23/19"
-
 
 def motionsensor():
     """The motionsensor function takes the input from the PIR sensor on pin 11 and
@@ -41,42 +41,93 @@ def tempreading():
     :return: nothing"""
     # read the serial port connection from the Arduino
     ser = serial.Serial('/dev/ttyACM0', 9600)
-    print(ser.readline())
+    tempread = open('tempread.txt', 'a+')
+    for line in range(5):
+        tempread.write(str(ser.readline()))
+        tempread.write("\n")
+    tempread.close()
+    tempread = open('tempread.txt', 'r')
+    #print(tempread.read())
+    tempread.close()
+    print(str(ser.readline()))
+    ser.close()
 
 
-def servocontrol():
-    """The servocontrol function defines the GPIO pins the two servos are connected to
-    and controls their movements
+def foodservo():
+    """The foodservo function defines the GPIO pin the food servo is connected to
+    and controls it's movement
     :return: nothing"""
-    # define GPIO pins 20 and 21 for the food servo and play servo
+    # define GPIO pin 20 for the food servo
     foodpin = 20
-    playpin = 21
-    # clean up any GPIO settings before setting the servos
+    # clean up any GPIO settings before setting the servo
     GPIO.cleanup()
     GPIO.setwarnings(False)
-    # set mode to BCM and set pins 20 and 21 to output
+    # set mode to BCM and set pin 20 to output
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(foodpin, GPIO.OUT)
-    GPIO.setup(playpin, GPIO.OUT)
 
-    # set the PWM for food servo and play servo
+    # set the PWM for food servo
     foodpwm = GPIO.PWM(foodpin, 50)
-    playpwm = GPIO.PWM(playpin, 50)
 
-    # initialize the servos
+    # initialize the servo
     foodpwm.start(2.5)
-    playpwm.start(2.5)
 
-    # run servos until a KeyboardInterrupt exception
+    # run servo until a KeyboardInterrupt exception
     try:
         while True:
-            foodpwm.ChangeDutyCycle(5)
+            foodpwm.ChangeDutyCycle(15)
+            time.sleep(5)
+    except KeyboardInterrupt:
+        foodpwm.stop()
+
+
+def treatservo():
+    """The treatservo function does the same as foodservo but in a different direction
+    :return: nothing"""
+    treatpin = 20
+    GPIO.cleanup()
+    GPIO.setwarnings(False)
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(treatpin, GPIO.OUT)
+
+    treatpwm = GPIO.PWM(treatpin, 50)
+    treatpwm.start(2.5)
+
+    try:
+        while True:
+            treatpwm.ChangeDutyCycle(45)
+            time.sleep(0.5)
+    except KeyboardInterrupt:
+        treatpwm.stop()
+
+
+def playservo():
+    """The playservo function defines the GPIO pin for the play toy servo 
+    and controls it's movement
+    :return: nothing"""
+    # define GPIO pin 21 for the play servo
+    playpin = 21
+    # clean up any GPIO settings before setting the servo
+    GPIO.cleanup()
+    GPIO.setwarnings(False)
+    # set mode to BCM and set pin 21 to output
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(playpin, GPIO.OUT)
+
+    # set the PWM for the play servo
+    playpwm = GPIO.PWM(playpin, 50)
+
+    # initialize the servo
+    playpwm.start(2.5)
+
+    # run servo until a KeyboardInterrupt exception
+    try:
+        while True:
             playpwm.ChangeDutyCycle(5)
             time.sleep(0.5)
     except KeyboardInterrupt:
-        foodpwm.stop()
         playpwm.stop()
-
+ 
 
 def consoleargs(arg):
     """The consoleargs function takes console input and compares it to a dictionary key. If the
@@ -84,9 +135,11 @@ def consoleargs(arg):
     :return: none"""
     # define the arguments dictionary
     args = {
-        "motionsensor": motionsensor,
-        "tempreading": tempreading,
-        "servocontrol": servocontrol,
+        "motion": motionsensor,
+        "temp": tempreading,
+        "feed": foodservo,
+        "treat": treatservo,
+        "play": playservo,
         "exit": shutoff
     }
     # validate that the argument is valid and run the function
@@ -101,13 +154,23 @@ def shutoff():
     sys.exit()
 
 
+def _args():
+    """The _args function uses the argparse library to parse the user's arguments
+    :return: The command line arguments"""
+    arg_parser = argparse.ArgumentParser(description='catnanny lets the owner feed, treat, play with, and check on their cat')
+    arg_parser.add_argument('action',
+                            choices=['feed', 'treat', 'play'],
+                            default='feed',
+                            help='Action you want Cat Nanny to do')
+    return arg_parser.parse_args()
+
+
 def main():
     """The main function calls on the sensors and inputs the data into a database
     :return: nothing"""
-    # take user input and print the output of the requested sensor
-    while True:
-        userinput = input("Enter the commands motionsensor, tempreading, or servocontrol\n")
-        consoleargs(userinput)
+    # take the command line argument and call the requested function
+    args = _args()
+    consoleargs(args.action)
 
 
 if __name__ == '__main__':

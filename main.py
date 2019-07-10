@@ -16,8 +16,7 @@ def motionsensor():
     """The motionsensor function takes the input from the PIR sensor on pin 11 and
     prints to the console if motion is detected
     :return: nothing"""
-    # clean up any GPIO settings before setting the motion sensor
-    GPIO.cleanup()
+    # do not show warnings
     GPIO.setwarnings(False)
 
     # set mode to BOARD and GPIO pin 11 to input
@@ -33,7 +32,8 @@ def motionsensor():
     elif (i == 1):
         print("Cat is at the Cat Nanny!")
         time.sleep(0.2)
-
+    # clean up any GPIO settings after using motion sensor
+    GPIO.cleanup()
 
 def tempreading():
     """The tempreading function takes the serial output from the Arduino and prints
@@ -58,47 +58,47 @@ def foodservo():
     and controls it's movement
     :return: nothing"""
     # define GPIO pin 20 for the food servo
-    foodpin = 20
-    # clean up any GPIO settings before setting the servo
-    GPIO.cleanup()
+    foodpin = 21
+    # do not show warnings
     GPIO.setwarnings(False)
     # set mode to BCM and set pin 20 to output
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(foodpin, GPIO.OUT)
 
-    # set the PWM for food servo
+    # set the PWM for food servo and initialize
     foodpwm = GPIO.PWM(foodpin, 50)
-
-    # initialize the servo
     foodpwm.start(2.5)
 
     # run servo until a KeyboardInterrupt exception
-    try:
-        while True:
-            foodpwm.ChangeDutyCycle(15)
-            time.sleep(5)
-    except KeyboardInterrupt:
+    while True:
+        foodpwm.ChangeDutyCycle(15)
+        time.sleep(5)
         foodpwm.stop()
+        GPIO.cleanup()
+        break
 
 
 def treatservo():
     """The treatservo function does the same as foodservo but in a different direction
     :return: nothing"""
-    treatpin = 20
-    GPIO.cleanup()
+    # set the GPIO pin of the servo
+    treatpin = 21
+    # do not show warnings
     GPIO.setwarnings(False)
+    # set mode to BCM and the pin to output
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(treatpin, GPIO.OUT)
 
+    # set PWM to 50 and initialize
     treatpwm = GPIO.PWM(treatpin, 50)
     treatpwm.start(2.5)
 
-    try:
-        while True:
-            treatpwm.ChangeDutyCycle(45)
-            time.sleep(0.5)
-    except KeyboardInterrupt:
+    while True:
+        treatpwm.ChangeDutyCycle(10)
+        time.sleep(5)
         treatpwm.stop()
+        GPIO.cleanup()
+        break
 
 
 def playservo():
@@ -106,9 +106,8 @@ def playservo():
     and controls it's movement
     :return: nothing"""
     # define GPIO pin 21 for the play servo
-    playpin = 21
-    # clean up any GPIO settings before setting the servo
-    GPIO.cleanup()
+    playpin = 20
+    # do not show warnings
     GPIO.setwarnings(False)
     # set mode to BCM and set pin 21 to output
     GPIO.setmode(GPIO.BCM)
@@ -121,13 +120,13 @@ def playservo():
     playpwm.start(2.5)
 
     # run servo until a KeyboardInterrupt exception
-    try:
-        while True:
-            playpwm.ChangeDutyCycle(5)
-            time.sleep(0.5)
-    except KeyboardInterrupt:
+    while True:
+        playpwm.ChangeDutyCycle(5)
+        time.sleep(5)
         playpwm.stop()
- 
+        GPIO.cleanup()
+        break
+
 
 def consoleargs(arg):
     """The consoleargs function takes console input and compares it to a dictionary key. If the
@@ -150,7 +149,6 @@ def consoleargs(arg):
 def shutoff():
     """The shutoff function cleans up the GPIO mode and setup and exits with code 0
     :return: none"""
-    GPIO.cleanup()
     sys.exit()
 
 
@@ -159,7 +157,7 @@ def _args():
     :return: The command line arguments"""
     arg_parser = argparse.ArgumentParser(description='catnanny lets the owner feed, treat, play with, and check on their cat')
     arg_parser.add_argument('action',
-                            choices=['feed', 'treat', 'play'],
+                            choices=['feed', 'treat', 'play', 'motion', 'temp'],
                             default='feed',
                             help='Action you want Cat Nanny to do')
     return arg_parser.parse_args()

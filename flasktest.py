@@ -1,7 +1,6 @@
 from flask import Flask, send_from_directory
 
 import main
-import videocap
 
 #UPLOAD_FOLDER = '/usr/pi/cat-nanny/'
 
@@ -23,16 +22,6 @@ def feed():
 def play():
     main.playservo()
     return ''
-
-@app.route('/video/<video_name>')
-def vid(video_name):
-    #videocap.videocap()
-    return send_from_directory(app.config['CLIENT_VIDEOS'], filename=video_name, as_attachment=True)
-    #try:
-    #    videocap.videocap()
-    #    return send_from_directory(app.config['CLIENT_VIDEOS'], filename=image_name, as_attachment=True)
-    #except FileNotFoundError:
-    #    abort(404)
 
 
 @app.route('/treat')

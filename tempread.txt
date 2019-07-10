@@ -1,0 +1,5 @@
+b'428.04 degrees F\r\n'
+b'428.04 degrees F\r\n'
+b'428.91 degrees F\r\n'
+b'428.91 degrees F\r\n'
+b'428.91 degrees F\r\n'

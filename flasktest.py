@@ -1,8 +1,6 @@
-from flask import Flask, send_from_directory
+from flask import Flask, request
 
-import main
-
-#UPLOAD_FOLDER = '/usr/pi/cat-nanny/'
+import catnanny
 
 app = Flask(__name__)
 app.config['CLIENT_VIDEOS'] = '/home/pi/cat-nanny/'
@@ -14,19 +12,44 @@ def hello():
 
 @app.route('/feed')
 def feed():
-    main.foodservo()
+    catnanny.foodservo()
     return ''
 
 
 @app.route('/play')
 def play():
-    main.playservo()
+    catnanny.playservo()
     return ''
 
 
 @app.route('/treat')
 def treat():
-    main.treatservo()
+    catnanny.treatservo()
+    return ''
+
+
+@app.route('/read_db/<sensor>')
+def read_db():
+    catnanny.query(sensor)
+    return ''
+
+
+@app.route('/login')
+def login():
+    # check if entered credentials match an entry in DB
+    data = request.get_json()
+    print(data)
+    email = data['email']
+    password = data['password']
+    catnanny.login(email, password)
+    return 'Lookup Successful!'
+
+
+@app.route('/signup')
+def signup(email, password):
+    # insert entered credentials into DB
+    catnanny.signup(email, password)
+    return 'Signup Successful!'
 
 
 if __name__ == '__main__':

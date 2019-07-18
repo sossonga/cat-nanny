@@ -7,7 +7,7 @@ import RPi.GPIO as GPIO
 import time
 import sys
 import argparse
-import db_manager
+import sqlite3
 
 __author__ = "Sara Alsowaimel and Amanda Sossong"
 __version__ = "1.0"
@@ -35,6 +35,8 @@ def motionsensor():
         time.sleep(0.2)
     # clean up any GPIO settings after using motion sensor
     GPIO.cleanup()
+    return i
+
 
 def tempreading():
     """The tempreading function takes the serial output from the Arduino and prints
@@ -42,8 +44,14 @@ def tempreading():
     :return: nothing"""
     # read the serial port connection from the Arduino
     ser = serial.Serial('/dev/ttyACM0', 9600)
-    print(ser.readline().decode('utf-8'))
+
+    reading = ser.readline().decode('utf-8')
+
+    print(reading)
+
     ser.close()
+
+    return reading
 
 
 def foodservo():
@@ -157,19 +165,33 @@ def _args():
 
 
 def query(sensor):
-    conn, c = db_manager._get_db_connection()
-    c.execute("""SELECT reading_value FROM sensor_data WHERE sensor = ? AND MAX(timestamp)""", sensor)
-    #conn.commit()
+    conn = sqlite3.connect("cat-nanny.db")
+    c = conn.cursor()
+    c.execute("""SELECT reading_value FROM sensor_data WHERE sensor = ? ORDER BY timestamp DESC LIMIT 1""", (sensor,))
+    result = c.fetchone()
+    conn.close()
+    for row in result:
+        return row
+    #conn.close()
+    #return result
 
 
 def login(email, password):
-    conn, c = db_manager._get_db_connection()
-    c.execute("""SELECT email, password FROM user WHERE email = ? AND password = ?""", (email, password))
+    conn = sqlite3.connect("cat-nanny.db")
+    c = conn.cursor()
+    c.execute("""SELECT COUNT(*) FROM user WHERE email = ? AND password = ?""", (email, password,))
+    result = c.fetchone()
+    conn.close()
+    for row in result:
+        return row
 
 
 def signup(email, password):
-    conn, c = db_manager._get_db_connection()
+    conn = sqlite3.connect("cat-nanny.db")
+    c = conn.cursor()
     c.execute("""INSERT INTO user VALUES (?, ?)""", (email, password))
+    conn.commit()
+    conn.close()
 
 
 def main():

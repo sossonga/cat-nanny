@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 
 import catnanny
 
@@ -28,26 +28,40 @@ def treat():
     return ''
 
 
-@app.route('/read_db/<sensor>')
+@app.route('/read_db')
 def read_db():
-    catnanny.query(sensor)
-    return ''
+    sensor = request.args.get('sensor')
+    print(sensor)
+    return str(catnanny.query(sensor))
+    #return ''
 
 
-@app.route('/login')
+@app.route('/login', methods=['GET','POST'])
 def login():
     # check if entered credentials match an entry in DB
     data = request.get_json()
-    print(data)
     email = data['email']
     password = data['password']
-    catnanny.login(email, password)
-    return 'Lookup Successful!'
+    login = catnanny.login(email, password)
+    print(login)
+    print(jsonify(login))
+#    return jsonify(login)
+    account_exists = False
+    if login == 1:
+        account_exists = True
+
+    response = jsonify({'account_exists': account_exists})
+    print(response.data)
+
+    return response
 
 
 @app.route('/signup')
-def signup(email, password):
+def signup():
     # insert entered credentials into DB
+    data = request.get_json()
+    email = data['email']
+    password = data['password']
     catnanny.signup(email, password)
     return 'Signup Successful!'
 

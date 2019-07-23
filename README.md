@@ -1,5 +1,5 @@
 # cat-nanny
-![Image of Cat Nanny logo](images/catnanny.jpg)
+![Image of Cat Nanny logo](images/catnanny.JPG)
 
 Cat Nanny is an IoT cat care system that lets you feed, treat, and play with your pet from anywhere. This is the repo for the Raspberry Pi server.
 

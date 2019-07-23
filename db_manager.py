@@ -62,11 +62,14 @@ def _poll_sensors(conn, cursor):
     :return: nothing"""
     conn, c = _get_db_connection()
 
+    motion_reading = catnanny.motionsensor()
+    temp_reading = catnanny.tempreading()
+
     current_timestamp = datetime.now().isoformat()
     # insert a timestamp, the word motion, and the output from catnanny.motionsensor into sensor_data
-    c.execute("""INSERT INTO sensor_data VALUES (?, ?, ?)""", (current_timestamp, 'motion', catnanny.motionsensor()))
+    c.execute("""INSERT INTO sensor_data VALUES (?, ?, ?)""", (current_timestamp, 'motion', motion_reading))
     # insert a timestamp, the word temperature, and the output from catnanny.tempreading into sensor_data
-    c.execute("""INSERT INTO sensor_data VALUES (?, ?, ?)""", (current_timestamp, 'temperature', catnanny.tempreading()))
+    c.execute("""INSERT INTO sensor_data VALUES (?, ?, ?)""", (current_timestamp, 'temperature', temp_reading))
 
     conn.commit()
 

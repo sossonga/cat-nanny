@@ -1,4 +1,6 @@
-from flask import Flask, request, jsonify
+from multiprocessing import Process
+
+from flask import Flask, request, jsonify, Response
 
 import catnanny
 
@@ -10,30 +12,46 @@ def hello():
     return 'Hello, World!'
 
 
-@app.route('/feed')
-def feed():
-    catnanny.foodservo()
-    return ''
-
-
-@app.route('/play')
-def play():
-    catnanny.playservo()
-    return ''
-
-
-@app.route('/treat')
-def treat():
-    catnanny.treatservo()
-    return ''
+@app.route('/servo')
+def servo():
+    servo_type = request.args.get('type')
+    print("Testing")
+    process = Process(target=catnanny.servo, args=(servo_type,))
+    process.start()
+    return Response('', status=200)
 
 
 @app.route('/read_db')
 def read_db():
     sensor = request.args.get('sensor')
-    print(sensor)
-    return str(catnanny.query(sensor))
-    #return ''
+    #process = Process
+    motion = False
+    result = str(catnanny.query(sensor))
+    print(result)
+    print(type(result))
+    if sensor == 'temperature':
+        return Response(
+            result,
+            status=200)
+    else:
+        if result == 1:
+            motion = True
+            return Response(
+                motion,
+                status=200)
+        else:
+            return Response(
+                '',
+                status=200)
+
+
+@app.route('/stats')
+def get_stats():
+    stat = request.args.get('stat')
+    result_stat = str(catnanny.stat_query(stat)[0])
+    return Response(
+        result_stat,
+        status=200)
 
 
 @app.route('/login', methods=['GET','POST'])
@@ -43,15 +61,11 @@ def login():
     email = data['email']
     password = data['password']
     login = catnanny.login(email, password)
-    print(login)
-    print(jsonify(login))
-#    return jsonify(login)
     account_exists = False
     if login == 1:
         account_exists = True
 
     response = jsonify({'account_exists': account_exists})
-    print(response.data)
 
     return response
 
